@@ -1,162 +1,112 @@
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-*$py.class
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from statsmodels.tsa.holtwinters import ExponentialSmoothing
+from sklearn.metrics import mean_absolute_error, mean_squared_error
 
-# C extensions
-*.so
+# Load the dataset
+transactions = pd.read_csv(r'C:\Users\LENOVO\Desktop\csvs\sales_transactions.csv')
+transactions['order_date'] = pd.to_datetime(transactions['order_date'])
 
-# Distribution / packaging
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-share/python-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
+# Aggregate sales amount by date
+sales_data = transactions.groupby('order_date')['sales_amount'].sum().reset_index()
+sales_data = sales_data.set_index('order_date')
 
-# PyInstaller
-#  Usually these files are written by a python script from a template
-#  before PyInstaller builds the exe, so as to inject date/other infos into it.
-*.manifest
-*.spec
+# Fit Exponential Smoothing model
+model = ExponentialSmoothing(sales_data['sales_amount'], 
+                             seasonal='add', 
+                             seasonal_periods=12,  # Adjust based on seasonality
+                             trend='add')
+fitted_model = model.fit()
 
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
+# Forecast for the next 36 months (3 years)
+forecast_values = fitted_model.forecast(36)
+forecast_index = pd.date_range(sales_data.index[-1] + pd.DateOffset(months=1), periods=36, freq='MS')
 
-# Unit test / coverage reports
-htmlcov/
-.tox/
-.nox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.py,cover
-.hypothesis/
-.pytest_cache/
-cover/
+# Plot actual sales and forecast
+plt.figure(figsize=(12, 6))
+plt.plot(sales_data, label='Actual Sales')
+plt.plot(forecast_index, forecast_values, color='red', label='Forecasted Sales')
+plt.title('Sales Forecast for the Next 3 Years with Exponential Smoothing')
+plt.xlabel('Date')
+plt.ylabel('Sales Amount')
+plt.legend()
+plt.show()
 
-# Translations
-*.mo
-*.pot
+# Display forecasted values
+forecast_output = pd.DataFrame({'Date': forecast_index, 'Forecasted Sales': forecast_values})
+print("Forecasted Sales for the Next 3 Years:")
+print(forecast_output)
 
-# Django stuff:
-*.log
-local_settings.py
-db.sqlite3
-db.sqlite3-journal
+# Model Evaluation - Calculate MAE, MSE, RMSE (if you have actual sales for the forecast period)
+# Uncomment and adjust the code if actual values are available
+# actual_values = sales_data['sales_amount'][-36:]  # Adjust this to match your actual data
+# mae = mean_absolute_error(actual_values, forecast_values)
+# mse = mean_squared_error(actual_values, forecast_values)
+# rmse = np.sqrt(mse)
+# print(f'MAE: {mae}, MSE: {mse}, RMSE: {rmse}')
 
-# Flask stuff:
-instance/
-.webassets-cache
+# Residual Analysis
+residuals = fitted_model.resid
+plt.figure(figsize=(12, 6))
+plt.plot(residuals)
+plt.title('Residuals of the Forecast Model')
+plt.show()
 
-# Scrapy stuff:
-.scrapy
+sales_data = transactions.groupby('order_date')['sales_amount'].sum().reset_index()
+sales_data = sales_data.set_index('order_date')
 
-# Sphinx documentation
-docs/_build/
+# Fit Exponential Smoothing model
+model = ExponentialSmoothing(
+    sales_data['sales_amount'],
+    seasonal='add',
+    seasonal_periods=12,  # Adjust based on seasonality
+    trend='add'
+)
+fitted_model = model.fit()
 
-# PyBuilder
-.pybuilder/
-target/
+# Forecast for the next 36 months (3 years)
+forecast_periods = 36
+forecast_values = fitted_model.forecast(forecast_periods)
+forecast_index = pd.date_range(start=sales_data.index[-1] + pd.DateOffset(months=1), 
+                                periods=forecast_periods, freq='MS')
 
-# Jupyter Notebook
-.ipynb_checkpoints
+# Plot actual sales and forecast
+plt.figure(figsize=(12, 6))
+plt.plot(sales_data, label='Actual Sales', color='blue')
+plt.plot(forecast_index, forecast_values, label='Forecasted Sales', color='red', linestyle='--')
+plt.title('Sales Forecast for the Next 3 Years with Exponential Smoothing')
+plt.xlabel('Date')
+plt.ylabel('Sales Amount')
+plt.legend()
+plt.grid()
+plt.tight_layout()
+plt.show()
 
-# IPython
-profile_default/
-ipython_config.py
+# Display forecasted values
+forecast_output = pd.DataFrame({'Date': forecast_index, 'Forecasted Sales': forecast_values})
+print("Forecasted Sales for the Next 3 Years:")
+print(forecast_output)
 
-# pyenv
-#   For a library or package, you might want to ignore these files since the code is
-#   intended to run in multiple environments; otherwise, check them in:
-# .python-version
+# Model Evaluation - Calculate MAE, MSE, RMSE (if you have actual sales for the forecast period)
+# Uncomment and adjust the code if actual values are available
+# try:
+#     actual_values = sales_data['sales_amount'][-forecast_periods:]  # Adjust to match your actual data
+#     mae = mean_absolute_error(actual_values, forecast_values)
+#     mse = mean_squared_error(actual_values, forecast_values)
+#     rmse = np.sqrt(mse)
+#     print(f'MAE: {mae}, MSE: {mse}, RMSE: {rmse}')
+# except Exception as e:
+#     print(f"Error in model evaluation: {e}")
 
-# pipenv
-#   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.
-#   However, in case of collaboration, if having platform-specific dependencies or dependencies
-#   having no cross-platform support, pipenv may install dependencies that don't work, or not
-#   install all needed dependencies.
-#Pipfile.lock
-
-# poetry
-#   Similar to Pipfile.lock, it is generally recommended to include poetry.lock in version control.
-#   This is especially recommended for binary packages to ensure reproducibility, and is more
-#   commonly ignored for libraries.
-#   https://python-poetry.org/docs/basic-usage/#commit-your-poetrylock-file-to-version-control
-#poetry.lock
-
-# pdm
-#   Similar to Pipfile.lock, it is generally recommended to include pdm.lock in version control.
-#pdm.lock
-#   pdm stores project-wide configurations in .pdm.toml, but it is recommended to not include it
-#   in version control.
-#   https://pdm.fming.dev/latest/usage/project/#working-with-version-control
-.pdm.toml
-.pdm-python
-.pdm-build/
-
-# PEP 582; used by e.g. github.com/David-OConnor/pyflow and github.com/pdm-project/pdm
-__pypackages__/
-
-# Celery stuff
-celerybeat-schedule
-celerybeat.pid
-
-# SageMath parsed files
-*.sage.py
-
-# Environments
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
-
-# Spyder project settings
-.spyderproject
-.spyproject
-
-# Rope project settings
-.ropeproject
-
-# mkdocs documentation
-/site
-
-# mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json
-
-# Pyre type checker
-.pyre/
-
-# pytype static type analyzer
-.pytype/
-
-# Cython debug symbols
-cython_debug/
-
-# PyCharm
-#  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
-#  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
-#  and can be added to the global gitignore or merged into this file.  For a more nuclear
-#  option (not recommended) you can uncomment the following to ignore the entire idea folder.
-#.idea/
+# Residual Analysis
+residuals = fitted_model.resid
+plt.figure(figsize=(12, 6))
+plt.plot(residuals, marker='o', linestyle='None')
+plt.axhline(0, color='red', linestyle='--', linewidth=1)  # Line at zero for reference
+plt.title('Residuals of the Forecast Model')
+plt.xlabel('Time')
+plt.ylabel('Residuals')
+plt.grid()
+plt.tight_layout()
+plt.show()
