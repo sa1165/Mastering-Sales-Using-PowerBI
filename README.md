@@ -29,7 +29,7 @@
 
 # 📖 Overview
 
-Mastering Sales Using Power BI & Machine Learning is a comprehensive Business Intelligence and Predictive Analytics project developed to analyze historical sales data, discover hidden business patterns, and forecast future sales using Machine Learning.
+Mastering Sales Using Power BI is a comprehensive Business Intelligence and Predictive Analytics project developed to analyze historical sales data, discover hidden business patterns, and forecast future sales 
 
 The project combines relational databases, data preprocessing, statistical analysis, predictive modeling, and interactive visualization into a single business intelligence solution.
 
